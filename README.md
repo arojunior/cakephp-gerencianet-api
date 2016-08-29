@@ -1,20 +1,20 @@
 # cakephp-gerencianet-api
- 
+
 Plugin de integração da API do Gateway Gerencianet com o Framework Cakephp 2.x.
 Métodos para checkout transparamente por meio de Boletos
 
 ```php
 /*
- * API disponível em https://github.com/gerencianet/gn-api-sdk-php/
+ * Este plugin depende da API disponível em https://github.com/gerencianet/gn-api-sdk-php/
  * @version 1.0
- * 
+ *
  * PHP >= 5.4.0
  */
 ```
 
 # Como usar
 
-O padrão do plugin é true. Você deve utilizar este metódo passando o parametro false para produção. (aconselho a alterar o padrão após concluir os testes) 
+O padrão do plugin é true. Você deve utilizar este metódo passando o parametro false para produção. (aconselho a alterar o padrão após concluir os testes)
 ```php
  $this->Transacao->sandbox(false);
 ```
@@ -45,7 +45,7 @@ $this->set('retorno', $this->Transacao->getRetorno());
 ```
 Para obter apenas os dados do boleto (código de barras e endereço para impressão)
 ```php
-$boleto = $this->Transacao->getBoleto()); 
+$boleto = $this->Transacao->getBoleto());
 ```
 
 # Notificação
