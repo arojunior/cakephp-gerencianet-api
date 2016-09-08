@@ -17,7 +17,7 @@ class GerencianetController extends AppController
 
     public function checkout()
     {
-        $this->Transacao->sandbox(true);
+        //$this->Transacao->sandbox(false);
 
         $this->Transacao->setCliente('Junior Oliveira', '00000000000', 'contato@arojunior.com', '4899999999');
 
@@ -80,7 +80,7 @@ class GerencianetController extends AppController
 
             foreach ($retorno['data'] as $r):
                 /*
-                 * Seu m�todo de tratamento do retorno
+                 * Seu método de tratamento do retorno
                  */
             endforeach;
         endif;
