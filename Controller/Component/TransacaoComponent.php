@@ -216,7 +216,7 @@ class TransacaoComponent extends Component
      * A api não permite mais de uma operação com o mesmo objeto estanciado,
      * por isso é criado um novo para cada operação
      */
-    public function upPagamento()
+    private function upPagamento()
     {
         $api = new Gerencianet($this->options);
         $this->charge['pagamento'] = $api->payCharge($this->params, $this->payment);
@@ -225,7 +225,7 @@ class TransacaoComponent extends Component
     /**
      * Configura custom id e url retorno
      */
-    public function upMetadados()
+    private function upMetadados()
     {
         $api = new Gerencianet($this->options);
         $this->metadata += ['custom_id' => $this->custom_id];
