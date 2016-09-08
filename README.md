@@ -2,6 +2,7 @@
 
 Plugin de integração da API do Gateway Gerencianet com o Framework Cakephp 2.x.
 Métodos para checkout transparamente por meio de Boletos
+(Por enquanto somente por boleto, cartão de crédito ainda não implementado)
 
 ```php
 /*
@@ -14,9 +15,14 @@ Métodos para checkout transparamente por meio de Boletos
 
 # Como usar
 
+Habilitar o Plugin
+```php
+ // O bootstrap precisa estar como true pois as configurações de api id e secret ficam dentro dele
+CakePlugin::load(array('Gerencianet' => array('bootstrap' => true)));
+```
 O padrão do plugin é true. Você deve utilizar este metódo passando o parametro false para produção. (aconselho a alterar o padrão após concluir os testes)
 ```php
- $this->Transacao->sandbox(false);
+$this->Transacao->sandbox(false);
 ```
 Adiciona os dados do cliente (campos e-mail e telefone são opcionais)
 ```php
