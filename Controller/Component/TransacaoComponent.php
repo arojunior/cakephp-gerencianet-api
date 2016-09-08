@@ -36,6 +36,7 @@ class TransacaoComponent extends Component
     private $charge = array();
     private $transacao_id;
     private $custom_id;
+    private $err;
 
     /**
      * Inicializa a classe configurando os dados coletados no arquivo Config\boostrap.php
@@ -203,12 +204,14 @@ class TransacaoComponent extends Component
                 self::upMetadados();
             endif;
         } catch (GerencianetException $e) {
-            print_r($e->code);
-            print_r($e->error);
-            print_r($e->errorDescription);
+            $this->err .= $e->code;
+            $this->err .= $e->error;
+            $this->err .= $e->errorDescription;
         } catch (Exception $e) {
-            print_r($e->getMessage());
+            $this->err .= $e->getMessage();
         }
+
+        self::errorHandler();
     }
 
     /**
@@ -245,12 +248,35 @@ class TransacaoComponent extends Component
             $api = new Gerencianet($this->options);
             $this->charge = $api->getNotification($this->params, []);
         } catch (GerencianetException $e) {
-            print_r($date . $e->code);
-            print_r($e->error);
-            print_r($e->errorDescription);
+            $this->err .= $date . $e->code;
+            $this->err .= $e->error;
+            $this->err .= $e->errorDescription;
         } catch (Exception $e) {
-            print_r($date . $e->getMessage());
+            $this->err .= $date . $e->getMessage();
         }
+
+        self::errorHandler();
+    }
+
+    /*
+    * Trata os possíveis erros
+    */
+    private function errorHandler()
+    {
+        if (!empty($this->err)):
+            throw new Exception($this->err);
+            self::logWritter();
+        endif;
+    }
+
+    /*
+    * Escreve os erros no arquivo de log
+    */
+    private function logWritter()
+    {
+        $fp = fopen(TMP . DS . 'logs' . DS . 'gerencianet.log', 'a');
+        fwrite($fp, $this->err);
+        fclose($fp);
     }
 
     /**
