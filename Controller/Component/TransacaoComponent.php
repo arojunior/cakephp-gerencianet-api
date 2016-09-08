@@ -116,7 +116,7 @@ class TransacaoComponent extends Component
 
         if (in_array($metodo, $this->payment_types)):
 
-            $pay = self::{$metodo}($dados);
+            $pay = call_user_func($metodo, $dados);
 
         endif;
 
@@ -144,7 +144,7 @@ class TransacaoComponent extends Component
      * @param array $dados
      * @return array
      */
-    public function boleto(array $dados = array())
+    private function boleto($dados = array())
     {
         return ['banking_billet' => [
                 'expire_at' => $dados['vencimento'],
@@ -157,7 +157,7 @@ class TransacaoComponent extends Component
      * Apenas exemplo
      * Precisa implementar corretamente
      */
-    public function cartao($dados = array())
+    private function cartao($dados = array())
     {
         $token = '6426f3abd8688639c6772963669bbb8e0eb3c319';
 
@@ -191,7 +191,7 @@ class TransacaoComponent extends Component
 
         try {
             $api = new Gerencianet($this->options);
-            // Cria a cobran�a
+            // Cria a cobrança
             $this->charge['transacao'] = $api->createCharge($this->params, $this->body);
 
             if (!empty($this->charge)):
