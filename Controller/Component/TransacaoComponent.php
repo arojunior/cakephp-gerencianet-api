@@ -3,15 +3,15 @@
 /**
  * Description of TransacaoComponent
  *
- * Plugin de integração da API do Gateway Gerencianet com o Framework Cakephp
- * Métodos para checkout transparamente por meio de Boletos
- * 
- * API disponível em https://github.com/gerencianet/gn-api-sdk-php/
+ * Plugin de integraÃ§Ã£o da API do Gateway Gerencianet com o Framework Cakephp
+ * MÃ©todos para checkout transparamente por meio de Boletos
+ *
+ * API disponÃ­vel em https://github.com/gerencianet/gn-api-sdk-php/
  * @version 1.0
- * 
+ *
  * PHP >= 5.4.0
- * 
- * 
+ *
+ *
  * @author arojunior (contato@arojunior.com)
  * @authorURI http://arojunior.com
  * @license MIT (http://opensource.org/licenses/MIT)
@@ -39,14 +39,14 @@ class TransacaoComponent extends Component
 
     /**
      * Inicializa a classe configurando os dados coletados no arquivo Config\boostrap.php
-     * 
+     *
      * Configure::write('Gerencianet.client', array(
      *   'id' => '',
      *   'secret' => '',
      *   'id_devel' => '',
      *   'secret_devel' => ''
      *   ));
-     * 
+     *
      */
     public function __construct()
     {
@@ -69,7 +69,7 @@ class TransacaoComponent extends Component
     }
 
     /**
-     * Muda a flag para desenvolvimento ou produção
+     * Muda a flag para desenvolvimento ou produÃ§Ã£o
      * @param $flag boolean
      */
     public function sandbox($flag)
@@ -95,8 +95,8 @@ class TransacaoComponent extends Component
     }
 
     /**
-     * Configura a url de retorno da transação
-     * Caso não seja informado, envia para a url padrão
+     * Configura a url de retorno da transaÃ§Ã£o
+     * Caso nÃ£o seja informado, envia para a url padrÃ£o
      * @param string $url
      */
     public function setUrl($url)
@@ -106,8 +106,8 @@ class TransacaoComponent extends Component
 
     /**
      * Aplica o metodo de pagamento informado
-     * @param string $metodo (boleto ou cartão)
-     * @param array dados 
+     * @param string $metodo (boleto ou cartÃ£o)
+     * @param array dados
      */
     public function setPagamento($metodo, $dados = array())
     {
@@ -124,10 +124,10 @@ class TransacaoComponent extends Component
     }
 
     /**
-     * Adiciona os itens a transação
+     * Adiciona os itens a transaÃ§Ã£o
      * @param string $nome
      * @param int $qtd
-     * @param int $valor (o valor deve ser informado como integer, não como float ou number. 
+     * @param int $valor (o valor deve ser informado como integer, nÃ£o como float ou number.
      * ex: R$ 10,00 deve ser informado 1000)
      */
     public function addItem($nome, $qtd, $valor)
@@ -140,7 +140,7 @@ class TransacaoComponent extends Component
     }
 
     /**
-     * Cria transação por boleto
+     * Cria transaÃ§Ã£o por boleto
      * @param array $dados
      * @return array
      */
@@ -154,12 +154,11 @@ class TransacaoComponent extends Component
     }
 
     /**
-     * Apenas exemplo 
+     * Apenas exemplo
      * Precisa implementar corretamente
      */
     public function cartao($dados = array())
     {
-
         $token = '6426f3abd8688639c6772963669bbb8e0eb3c319';
 
         $billingAddress = [
@@ -181,8 +180,8 @@ class TransacaoComponent extends Component
     }
 
     /**
-     * Cria transação
-     * @param string $custom_id (apesar de usualmente utilizarmos números, 
+     * Cria transaÃ§Ã£o
+     * @param string $custom_id (apesar de usualmente utilizarmos nÃºmeros,
      * o valor deve ser informado em formato string)
      */
     public function criar($custom_id = null)
@@ -192,7 +191,7 @@ class TransacaoComponent extends Component
 
         try {
             $api = new Gerencianet($this->options);
-            // Cria a cobrança
+            // Cria a cobranï¿½a
             $this->charge['transacao'] = $api->createCharge($this->params, $this->body);
 
             if (!empty($this->charge)):
@@ -214,8 +213,8 @@ class TransacaoComponent extends Component
 
     /**
      * Configura pagamento
-     * A api não permite mais de uma operação com o mesmo objeto estanciado, 
-     * por isso é criado um novo para cada operação
+     * A api nÃ£o permite mais de uma operaÃ§Ã£o com o mesmo objeto estanciado,
+     * por isso Ã© criado um novo para cada operaÃ§Ã£o
      */
     public function upPagamento()
     {
@@ -234,11 +233,10 @@ class TransacaoComponent extends Component
     }
 
     /**
-     * Envia o token para coletar as notificações de retorno da Gerencianet
+     * Envia o token para coletar as notificaÃ§Ãµes de retorno da Gerencianet
      */
     public function setToken($token)
     {
-
         $this->params = ['token' => $token];
         $date = '[' . date('d/m/Y H:i:s') . '] ';
 
@@ -265,7 +263,7 @@ class TransacaoComponent extends Component
     }
 
     /*
-     * Coleta e retorna o id da transação
+     * Coleta e retorna o id da transaÃ§Ã£o
      */
 
     public function id()
@@ -293,7 +291,7 @@ class TransacaoComponent extends Component
     }
 
     /**
-     * Coleta as notificações de retorno da Gerencianet
+     * Coleta as notificaÃ§Ãµes de retorno da Gerencianet
      */
     public function getNotificacao()
     {

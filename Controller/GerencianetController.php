@@ -3,8 +3,8 @@
 /**
  * Description of GerencianetController
  *
- * Apenas como exemplo de utilização
- * 
+ * Apenas como exemplo de utilizaÃ§Ã£o
+ *
  * @author arojunior (contato@arojunior.com)
  * @authorURI http://arojunior.com
  */
@@ -40,7 +40,7 @@ class GerencianetController extends AppController
         $this->set('retorno', $this->Transacao->getRetorno()); // Para obter todos os dados
 
         /**
-         * Para obter apenas os dados do boleto (código de barras e endereço para impressão)
+         * Para obter apenas os dados do boleto (cÃ³digo de barras e endereÃ§o para impressÃ£o)
          *
          * array(
          *    [custom_id] => '',
@@ -80,7 +80,7 @@ class GerencianetController extends AppController
 
             foreach ($retorno['data'] as $r):
                 /*
-                 * Seu método de tratamento do retorno 
+                 * Seu mï¿½todo de tratamento do retorno
                  */
             endforeach;
         endif;
