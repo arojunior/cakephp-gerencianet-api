@@ -69,7 +69,7 @@ class GerencianetController extends AppController
              *
              *
              */
-            $this->Transacao->sandbox(false);
+            //$this->Transacao->sandbox(false);
 
             $notificacao = $this->Transacao->setToken($this->request->data['notification']);
             /*
