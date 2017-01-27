@@ -16,7 +16,7 @@
  * @authorURI http://arojunior.com
  * @license MIT (http://opensource.org/licenses/MIT)
  */
-require_once APP . '/Vendor/gerencianet-api-v1.0/autoload.php';
+require_once APP . 'Vendor/gerencianet-api-v1.0/autoload.php';
 
 use Gerencianet\Exception\GerencianetException;
 use Gerencianet\Gerencianet;
@@ -131,14 +131,20 @@ class TransacaoComponent extends Component
      * @param int $valor (o valor deve ser informado como integer, não como float ou number.
      * ex: R$ 10,00 deve ser informado 1000)
      */
-    public function addItem($nome, $qtd, $valor)
-    {
-        array_push($this->items, [
-            'name' => $nome,
-            'amount' => $qtd,
-            'value' => intval(str_replace([',', '.'], '', $valor))
-        ]);
-    }
+     public function addItem($nome, $qtd, $valor, $marketplace = null)
+     {
+         $item = [
+             'name' => $nome,
+             'amount' => $qtd,
+             'value' => intval(str_replace([',', '.'], '', $valor))
+         ];
+
+         if (!empty($marketplace)):
+             $item = array_merge($item, ['marketplace' => $marketplace]);
+         endif;
+
+         return array_push($this->items, $item);
+     }
 
     /**
      * Cria transação por boleto

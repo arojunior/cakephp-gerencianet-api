@@ -21,7 +21,9 @@ class GerencianetController extends AppController
 
         $this->Transacao->setCliente('Junior Oliveira', '00000000000', 'contato@arojunior.com', '4899999999');
 
-        $this->Transacao->addItem('Servico de informatica', 1, 1000);
+        $marketplace = self::setMarketplace($representante);
+
+        $this->Transacao->addItem('Servico de informatica', 1, 1000, $marketplace);
 
         $this->Transacao->setUrl(Router::fullbaseUrl() . '/gerencianet/gerencianet/retorno');
 
@@ -84,6 +86,20 @@ class GerencianetController extends AppController
                  */
             endforeach;
         endif;
+    }
+
+    private function setMarketplace($representante = null)
+    {
+        if (!empty($representante)):
+            $repass_1 = [
+                'payee_code' => $representante,
+                'percentage' => 2500
+            ];
+            $repasses = [$repass_1];
+            return ['repasses' => $repasses];
+        endif;
+
+        return null;
     }
 
 }
