@@ -34,9 +34,9 @@ class TransacaoComponent extends Component
     private $payment = array();
     private $payment_types = array('boleto', 'cartao');
     private $charge = array();
-    private $transacao_id;
+    private $transaction_id;
     private $custom_id;
-    private $err;
+    private $err = array();
 
     /**
      * Inicializa a classe configurando os dados coletados no arquivo Config\boostrap.php
@@ -202,19 +202,19 @@ class TransacaoComponent extends Component
             $this->charge['transacao'] = $api->createCharge($this->params, $this->body);
 
             if (!empty($this->charge)):
-                $this->transacao_id = $this->charge['transacao']['data']['charge_id'];
-                $this->params += ['id' => intval($this->transacao_id)];
+                $this->transaction_id = $this->charge['transacao']['data']['charge_id'];
+                $this->params += ['id' => intval($this->transaction_id)];
 
                 self::upPagamento();
 
                 self::upMetadados();
             endif;
         } catch (GerencianetException $e) {
-            $this->err .= $e->code;
-            $this->err .= $e->error;
-            $this->err .= $e->errorDescription;
+            $this->err[] = $e->code;
+            $this->err[] = $e->error;
+            $this->err[] = $e->errorDescription;
         } catch (Exception $e) {
-            $this->err .= $e->getMessage();
+            $this->err[] = $e->getMessage();
         }
 
         self::errorHandler();
@@ -227,8 +227,18 @@ class TransacaoComponent extends Component
      */
     private function upPagamento()
     {
-        $api = new Gerencianet($this->options);
-        $this->charge['pagamento'] = $api->payCharge($this->params, $this->payment);
+        try {
+            $api = new Gerencianet($this->options);
+            $this->charge['pagamento'] = $api->payCharge($this->params, $this->payment);
+        } catch (GerencianetException $e) {
+            $this->err[] = $e->code;
+            $this->err[] = $e->error;
+            $this->err[] = $e->errorDescription;
+        } catch (Exception $e) {
+            $this->err[] = $e->getMessage();
+        }
+
+        self::errorHandler();
     }
 
     /**
@@ -236,9 +246,19 @@ class TransacaoComponent extends Component
      */
     private function upMetadados()
     {
-        $api = new Gerencianet($this->options);
-        $this->metadata += ['custom_id' => $this->custom_id];
-        $this->charge['metadados'] = $api->updateChargeMetadata($this->params, $this->metadata);
+        try {
+            $api = new Gerencianet($this->options);
+            $this->metadata += ['custom_id' => $this->custom_id];
+            $this->charge['metadados'] = $api->updateChargeMetadata($this->params, $this->metadata);
+        } catch (GerencianetException $e) {
+            $this->err[] = $e->code;
+            $this->err[] = $e->error;
+            $this->err[] = $e->errorDescription;
+        } catch (Exception $e) {
+            $this->err[] = $e->getMessage();
+        }
+
+        self::errorHandler();
     }
 
     /**
@@ -250,15 +270,14 @@ class TransacaoComponent extends Component
         $date = '[' . date('d/m/Y H:i:s') . '] ';
 
         try {
-
             $api = new Gerencianet($this->options);
             $this->charge = $api->getNotification($this->params, []);
         } catch (GerencianetException $e) {
-            $this->err .= $date . $e->code;
-            $this->err .= $e->error;
-            $this->err .= $e->errorDescription;
+            $this->err[] = $date . $e->code;
+            $this->err[] = $e->error;
+            $this->err[] = $e->errorDescription;
         } catch (Exception $e) {
-            $this->err .= $date . $e->getMessage();
+            $this->err[] = $date . $e->getMessage();
         }
 
         self::errorHandler();
@@ -270,8 +289,9 @@ class TransacaoComponent extends Component
     private function errorHandler()
     {
         if (!empty($this->err)):
-            throw new Exception($this->err);
+            throw new Exception(json_encode($this->err));
             self::logWritter();
+            unset($this->err);
         endif;
     }
 
@@ -281,8 +301,9 @@ class TransacaoComponent extends Component
     private function logWritter()
     {
         $fp = fopen(TMP . DS . 'logs' . DS . 'gerencianet.log', 'a');
-        fwrite($fp, $this->err);
+        fwrite($fp, print_r($this->err, TRUE));
         fclose($fp);
+        $this->err = null;
     }
 
     /**
@@ -300,7 +321,7 @@ class TransacaoComponent extends Component
 
     public function id()
     {
-        return $this->transacao_id;
+        return $this->transaction_id;
     }
 
     /**
@@ -312,7 +333,7 @@ class TransacaoComponent extends Component
         if (!empty($this->charge)):
             return [
                 'custom_id' => $this->custom_id,
-                'charge_id' => $this->transacao_id,
+                'charge_id' => $this->transaction_id,
                 'codigo' => $this->charge['pagamento']['data']['barcode'],
                 'link' => $this->charge['pagamento']['data']['link'],
                 'vencimento' => $this->charge['pagamento']['data']['expire_at']
@@ -332,12 +353,15 @@ class TransacaoComponent extends Component
          * https://github.com/gerencianet/gn-api-sdk-php/blob/master/docs/NOTIFICATION.md
          */
         if (!empty($this->charge)):
-            $this->transacao_id = $this->charge['data'][0]['identifiers']['charge_id'];
-            $this->custom_id = $this->charge['data'][0]['custom_id'];
+            $i = count($this->charge['data']);
+            $lastStatus = $this->charge['data'][$i-1];
+            $status = $lastStatus["status"];
+            $this->transaction_id = $lastStatus["identifiers"]["charge_id"];
+            $this->custom_id = $lastStatus['custom_id'];
             return [
-                'transacao_id' => $this->transacao_id,
+                'transacao_id' => $this->transaction_id,
                 'custom_id' => $this->custom_id,
-                'status' => $this->charge['data'][0]['status']['current']
+                'status' => $status["current"]
             ];
         endif;
     }
