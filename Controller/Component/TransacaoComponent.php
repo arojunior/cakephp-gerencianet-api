@@ -24,6 +24,7 @@ use Gerencianet\Gerencianet;
 class TransacaoComponent extends Component
 {
 
+    private $config;
     private $options;
     private $sandbox = true;
     private $items = array();
@@ -51,22 +52,22 @@ class TransacaoComponent extends Component
      */
     public function __construct()
     {
-        $config = Configure::read('Gerencianet');
-        if ($config):
+        self::getConfig();
+    }
 
-            if ($this->sandbox):
-                $sfx = '_devel';
-            else:
-                $sfx = null;
-            endif;
+    private function getConfig($sfx = null)
+    {
+        $this->config = Configure::read('Gerencianet');
 
-            $this->options = [
-                'client_id' => $config['client']['id' . $sfx],
-                'client_secret' => $config['client']['secret' . $sfx],
-                'sandbox' => $this->sandbox
-            ];
-
+        if ($this->sandbox):
+            $sfx = '_devel';
         endif;
+
+        return $this->options = [
+                'client_id'     => $this->config['client']['id' . $sfx],
+                'client_secret' => $this->config['client']['secret' . $sfx],
+                'sandbox'       => $this->sandbox
+            ];
     }
 
     /**
@@ -75,7 +76,9 @@ class TransacaoComponent extends Component
      */
     public function sandbox($flag)
     {
-        $this->options['sandbox'] = $flag;
+        $this->sandbox = $flag;
+
+        self::getConfig();
     }
 
     /**
@@ -88,10 +91,10 @@ class TransacaoComponent extends Component
     public function setCliente($nome, $cpf, $email = null, $telefone = null)
     {
         $this->customer = [
-            'name' => $nome,
-            'email' => $email,
-            'cpf' => $cpf,
-            'phone_number' => $telefone,
+            'name'          => $nome,
+            'email'         => $email,
+            'cpf'           => $cpf,
+            'phone_number'  => $telefone,
         ];
     }
 
@@ -134,9 +137,9 @@ class TransacaoComponent extends Component
      public function addItem($nome, $qtd, $valor, $marketplace = null)
      {
          $item = [
-             'name' => $nome,
-             'amount' => $qtd,
-             'value' => intval(str_replace([',', '.'], '', $valor))
+             'name'     => $nome,
+             'amount'   => $qtd,
+             'value'    => intval(str_replace([',', '.'], '', $valor))
          ];
 
          if (!empty($marketplace)):
@@ -153,9 +156,10 @@ class TransacaoComponent extends Component
      */
     private function boleto($dados = array())
     {
-        return ['banking_billet' => [
+        return [
+            'banking_billet' => [
                 'expire_at' => $dados['vencimento'],
-                'customer' => $this->customer
+                'customer'  => $this->customer
             ]
         ];
     }
@@ -169,19 +173,19 @@ class TransacaoComponent extends Component
         $token = '6426f3abd8688639c6772963669bbb8e0eb3c319';
 
         $billingAddress = [
-            'street' => 'Av JK',
-            'number' => 909,
-            'neighborhood' => 'Bauxita',
-            'zipcode' => '35400000',
-            'city' => 'Ouro Preto',
-            'state' => 'MG',
+            'street'        => 'Av JK',
+            'number'        => 909,
+            'neighborhood'  => 'Bauxita',
+            'zipcode'       => '35400000',
+            'city'          => 'Ouro Preto',
+            'state'         => 'MG',
         ];
 
-        return ['credit_card' => [
-                'installments' => 1,
-                'billing_address' => $billingAddress,
-                'payment_token' => $token,
-                'customer' => array_filter($this->customer)
+        return ['credit_card'       => [
+                'installments'      => 1,
+                'billing_address'   => $billingAddress,
+                'payment_token'     => $token,
+                'customer'          => array_filter($this->customer)
             ]
         ];
     }
@@ -283,7 +287,28 @@ class TransacaoComponent extends Component
         self::errorHandler();
     }
 
-    /*
+    /**
+    * Cancela uma transação
+    */
+    public function cancelar($transaction_id)
+    {
+        $this->params = ['id' => intval($transaction_id)];
+
+        try {
+            $api = new Gerencianet($this->options);
+            $this->charge = $api->cancelCharge($this->params, []);
+        } catch (GerencianetException $e) {
+            $this->err[] = $e->code;
+            $this->err[] = $e->error;
+            $this->err[] = $e->errorDescription;
+        } catch (Exception $e) {
+            $this->err[] = $date . $e->getMessage();
+        }
+
+        self::errorHandler();
+    }
+
+    /**
     * Trata os possíveis erros
     */
     private function errorHandler()
@@ -315,7 +340,7 @@ class TransacaoComponent extends Component
         return $this->charge;
     }
 
-    /*
+    /**
      * Coleta e retorna o id da transação
      */
 
@@ -332,10 +357,10 @@ class TransacaoComponent extends Component
     {
         if (!empty($this->charge)):
             return [
-                'custom_id' => $this->custom_id,
-                'charge_id' => $this->transaction_id,
-                'codigo' => $this->charge['pagamento']['data']['barcode'],
-                'link' => $this->charge['pagamento']['data']['link'],
+                'custom_id'  => $this->custom_id,
+                'charge_id'  => $this->transaction_id,
+                'codigo'     => $this->charge['pagamento']['data']['barcode'],
+                'link'       => $this->charge['pagamento']['data']['link'],
                 'vencimento' => $this->charge['pagamento']['data']['expire_at']
             ];
         endif;
@@ -353,15 +378,15 @@ class TransacaoComponent extends Component
          * https://github.com/gerencianet/gn-api-sdk-php/blob/master/docs/NOTIFICATION.md
          */
         if (!empty($this->charge)):
-            $i = count($this->charge['data']);
-            $lastStatus = $this->charge['data'][$i-1];
-            $status = $lastStatus["status"];
+            $i                    = count($this->charge['data']);
+            $lastStatus           = $this->charge['data'][$i-1];
+            $status               = $lastStatus["status"];
             $this->transaction_id = $lastStatus["identifiers"]["charge_id"];
-            $this->custom_id = $lastStatus['custom_id'];
+            $this->custom_id      = $lastStatus['custom_id'];
             return [
-                'transacao_id' => $this->transaction_id,
-                'custom_id' => $this->custom_id,
-                'status' => $status["current"]
+                'transacao_id'  => $this->transaction_id,
+                'custom_id'     => $this->custom_id,
+                'status'        => $status["current"]
             ];
         endif;
     }
