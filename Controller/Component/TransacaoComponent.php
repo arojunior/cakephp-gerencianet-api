@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Description of TransacaoComponent
+ * TransacaoComponent
  *
  * Plugin de integração da API do Gateway Gerencianet com o Framework Cakephp
  * Métodos para checkout transparamente por meio de Boletos
@@ -23,7 +23,7 @@ use Gerencianet\Gerencianet;
 
 class TransacaoComponent extends Component
 {
-
+    public $components = ['GLog'];
     private $config;
     private $options;
     private $sandbox = true;
@@ -37,7 +37,6 @@ class TransacaoComponent extends Component
     private $charge = array();
     private $transaction_id;
     private $custom_id;
-    private $err = array();
 
     /**
      * Inicializa a classe configurando os dados coletados no arquivo Config\boostrap.php
@@ -115,13 +114,10 @@ class TransacaoComponent extends Component
      */
     public function setPagamento($metodo, $dados = array())
     {
-
         $metodo = strtolower($metodo);
 
         if (in_array($metodo, $this->payment_types)):
-
             $pay = call_user_func($metodo, $dados);
-
         endif;
 
         $this->payment = ['payment' => $pay];
@@ -214,14 +210,12 @@ class TransacaoComponent extends Component
                 self::upMetadados();
             endif;
         } catch (GerencianetException $e) {
-            $this->err[] = $e->code;
-            $this->err[] = $e->error;
-            $this->err[] = $e->errorDescription;
+            $this->GLog->colector($e->code);
+            $this->GLog->colector($e->error);
+            $this->GLog->colector($e->errorDescription);
         } catch (Exception $e) {
-            $this->err[] = $e->getMessage();
+            $this->GLog->colector($e->getMessage());
         }
-
-        self::errorHandler();
     }
 
     /**
@@ -235,14 +229,14 @@ class TransacaoComponent extends Component
             $api = new Gerencianet($this->options);
             $this->charge['pagamento'] = $api->payCharge($this->params, $this->payment);
         } catch (GerencianetException $e) {
-            $this->err[] = $e->code;
-            $this->err[] = $e->error;
-            $this->err[] = $e->errorDescription;
+            $this->GLog->colector($e->code);
+            $this->GLog->colector($e->error);
+            $this->GLog->colector($e->errorDescription);
         } catch (Exception $e) {
-            $this->err[] = $e->getMessage();
+            $this->GLog->colector($e->getMessage());
         }
 
-        self::errorHandler();
+        $this->GLog->errorHandler();
     }
 
     /**
@@ -255,14 +249,14 @@ class TransacaoComponent extends Component
             $this->metadata += ['custom_id' => $this->custom_id];
             $this->charge['metadados'] = $api->updateChargeMetadata($this->params, $this->metadata);
         } catch (GerencianetException $e) {
-            $this->err[] = $e->code;
-            $this->err[] = $e->error;
-            $this->err[] = $e->errorDescription;
+            $this->GLog->colector($e->code);
+            $this->GLog->colector($e->error);
+            $this->GLog->colector($e->errorDescription);
         } catch (Exception $e) {
-            $this->err[] = $e->getMessage();
+            $this->GLog->colector($e->getMessage());
         }
 
-        self::errorHandler();
+        $this->GLog->errorHandler();
     }
 
     /**
@@ -277,14 +271,14 @@ class TransacaoComponent extends Component
             $api = new Gerencianet($this->options);
             $this->charge = $api->getNotification($this->params, []);
         } catch (GerencianetException $e) {
-            $this->err[] = $date . $e->code;
-            $this->err[] = $e->error;
-            $this->err[] = $e->errorDescription;
+            $this->GLog->colector($date . $e->code);
+            $this->GLog->colector($e->error);
+            $this->GLog->colector($e->errorDescription);
         } catch (Exception $e) {
-            $this->err[] = $date . $e->getMessage();
+            $this->GLog->colector($date . $e->getMessage());
         }
 
-        self::errorHandler();
+        $this->GLog->errorHandler();
     }
 
     /**
@@ -298,37 +292,14 @@ class TransacaoComponent extends Component
             $api = new Gerencianet($this->options);
             $this->charge = $api->cancelCharge($this->params, []);
         } catch (GerencianetException $e) {
-            $this->err[] = $e->code;
-            $this->err[] = $e->error;
-            $this->err[] = $e->errorDescription;
+            $this->GLog->colector($e->code);
+            $this->GLog->colector($e->error);
+            $this->GLog->colector($e->errorDescription);
         } catch (Exception $e) {
-            $this->err[] = $date . $e->getMessage();
+            $this->GLog->colector($e->getMessage());
         }
 
-        self::errorHandler();
-    }
-
-    /**
-    * Trata os possíveis erros
-    */
-    private function errorHandler()
-    {
-        if (!empty($this->err)):
-            throw new Exception(json_encode($this->err));
-            self::logWritter();
-            unset($this->err);
-        endif;
-    }
-
-    /*
-    * Escreve os erros no arquivo de log
-    */
-    private function logWritter()
-    {
-        $fp = fopen(TMP . DS . 'logs' . DS . 'gerencianet.log', 'a');
-        fwrite($fp, print_r($this->err, TRUE));
-        fclose($fp);
-        $this->err = null;
+        $this->GLog->errorHandler();
     }
 
     /**
